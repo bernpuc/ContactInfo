@@ -4,6 +4,7 @@
 @using ContactInfo.Services.Interfaces
 @using Microsoft.AspNetCore.Components.Forms
 @inject IEnumerable<IContactSource> Sources
+@inject IUserSettingsService UserSettings
 @inject BatchProcessorService BatchProcessor
 @inject IExcelService ExcelService
 @inject IJSRuntime JS
@@ -294,8 +295,26 @@
                                 @foreach (var src in Job.SourceNames)
                                 {
                                     var res = row.SourceResults.GetValueOrDefault(src);
-                                    <td>@(res is not null ? string.Join(", ", res.Emails) : "")</td>
-                                    <td>@(res is not null ? string.Join(", ", res.Phones) : "")</td>
+                                    <td>
+                                        @if (res?.Error is not null)
+                                        {
+                                            <span class="text-danger small" title="@res.Error">Error</span>
+                                        }
+                                        else
+                                        {
+                                            @(res is not null ? string.Join(", ", res.Emails) : "")
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (res?.Error is not null)
+                                        {
+                                            <span class="text-danger small" title="@res.Error">Error</span>
+                                        }
+                                        else
+                                        {
+                                            @(res is not null ? string.Join(", ", res.Phones) : "")
+                                        }
+                                    </td>
                                 }
 
                                 <td class="@(row.RankedEmails.Any(e => e.IsMultiSource) ? "table-success fw-semibold" : "")">
@@ -313,11 +332,18 @@
                                         case RowStatus.Processing:
                                             <span class="spinner-border spinner-border-sm text-primary"></span>
                                             break;
+                                        case RowStatus.Complete when row.RankedEmails.Count == 0 && row.RankedPhones.Count == 0:
+                                            <span class="text-muted">No results</span>
+                                            break;
                                         case RowStatus.Complete:
                                             <span class="text-success">✓</span>
                                             break;
                                         case RowStatus.Failed:
-                                            <span class="text-danger" title="@row.Error">✗</span>
+                                            <span class="text-danger">✗</span>
+                                            @if (!string.IsNullOrEmpty(row.Error))
+                                            {
+                                                <div class="text-danger small">@row.Error</div>
+                                            }
                                             break;
                                     }
                                 </td>
@@ -360,7 +386,7 @@
         StateHasChanged();
 
         var url     = SingleUrl.Trim().TrimEnd('/');
-        var sources = Sources.ToList();
+        var sources = ActiveSources();
         var tasks   = sources.Select(s => s.LookupAsync(url));
         var results = await Task.WhenAll(tasks);
 
@@ -462,6 +488,14 @@
         var bytes  = ExcelService.GenerateSampleImport();
         var base64 = Convert.ToBase64String(bytes);
         await JS.InvokeVoidAsync("downloadFile", "ContactInfo_Sample.xlsx", base64);
+    }
+
+    private List<IContactSource> ActiveSources()
+    {
+        var sources = UserSettings.DemoMode
+            ? Sources.Where(s => s is DemoContactSource)
+            : Sources.Where(s => s is not DemoContactSource);
+        return sources.Where(s => UserSettings.IsSourceEnabled(s.Name)).ToList();
     }
 
     private static string ShortUrl(string url)

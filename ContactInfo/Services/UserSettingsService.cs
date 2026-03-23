@@ -18,11 +18,35 @@ public class UserSettingsService : IUserSettingsService
         _data = Load(fallback.Value);
     }
 
-    public string ApolloApiKey => _data.ApolloApiKey;
+    public string ApolloApiKey       => _data.ApolloApiKey;
+    public string RocketReachApiKey  => _data.RocketReachApiKey;
+    public string SignalHireApiKey   => _data.SignalHireApiKey;
+    public bool   DemoMode           => _data.DemoMode;
+    public bool   ApolloEnabled      => _data.ApolloEnabled;
+    public bool   RocketReachEnabled => _data.RocketReachEnabled;
+    public bool   SignalHireEnabled  => _data.SignalHireEnabled;
 
-    public void Save(string apolloApiKey)
+    public bool IsSourceEnabled(string sourceName) => sourceName switch
     {
-        _data = new UserSettingsData { ApolloApiKey = apolloApiKey };
+        "Apollo"      => _data.ApolloEnabled,
+        "RocketReach" => _data.RocketReachEnabled,
+        "SignalHire"  => _data.SignalHireEnabled,
+        _             => true
+    };
+
+    public void Save(string apolloApiKey, string rocketReachApiKey, string signalHireApiKey,
+                     bool demoMode, bool apolloEnabled, bool rocketReachEnabled, bool signalHireEnabled)
+    {
+        _data = new UserSettingsData
+        {
+            ApolloApiKey       = apolloApiKey,
+            RocketReachApiKey  = rocketReachApiKey,
+            SignalHireApiKey   = signalHireApiKey,
+            DemoMode           = demoMode,
+            ApolloEnabled      = apolloEnabled,
+            RocketReachEnabled = rocketReachEnabled,
+            SignalHireEnabled  = signalHireEnabled
+        };
         Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
         File.WriteAllText(SettingsPath,
             JsonSerializer.Serialize(_data, new JsonSerializerOptions { WriteIndented = true }));
@@ -44,11 +68,19 @@ public class UserSettingsService : IUserSettingsService
 
     private static UserSettingsData FromFallback(AppSettings s) => new()
     {
-        ApolloApiKey = s.ApolloApiKey
+        ApolloApiKey      = s.ApolloApiKey,
+        RocketReachApiKey = s.RocketReachApiKey,
+        SignalHireApiKey  = s.SignalHireApiKey
     };
 
     private class UserSettingsData
     {
-        public string ApolloApiKey { get; set; } = "";
+        public string ApolloApiKey       { get; set; } = "";
+        public string RocketReachApiKey  { get; set; } = "";
+        public string SignalHireApiKey   { get; set; } = "";
+        public bool   DemoMode           { get; set; } = true;
+        public bool   ApolloEnabled      { get; set; } = true;
+        public bool   RocketReachEnabled { get; set; } = true;
+        public bool   SignalHireEnabled  { get; set; } = true;
     }
 }

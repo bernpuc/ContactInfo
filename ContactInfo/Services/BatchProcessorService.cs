@@ -6,10 +6,12 @@ namespace ContactInfo.Services;
 public class BatchProcessorService
 {
     private readonly IEnumerable<IContactSource> _sources;
+    private readonly IUserSettingsService        _settings;
 
-    public BatchProcessorService(IEnumerable<IContactSource> sources)
+    public BatchProcessorService(IEnumerable<IContactSource> sources, IUserSettingsService settings)
     {
-        _sources = sources;
+        _sources  = sources;
+        _settings = settings;
     }
 
     /// <summary>
@@ -19,9 +21,23 @@ public class BatchProcessorService
     public async Task ProcessAsync(BatchJob job, Func<Task> onRowComplete,
         CancellationToken ct = default)
     {
-        var sourceList  = _sources.ToList();
+        var sourceList  = ActiveSources().ToList();
         job.SourceNames = sourceList.Select(s => s.Name).ToList();
-        job.IsRunning   = true;
+        job.IsRunning  = true;
+
+        if (sourceList.Count == 0)
+        {
+            foreach (var row in job.Rows)
+            {
+                row.Status = RowStatus.Failed;
+                row.Error  = _settings.DemoMode
+                    ? "No demo sources registered."
+                    : "No API sources configured. Add an API key in Settings.";
+            }
+            job.IsRunning = false;
+            await onRowComplete();
+            return;
+        }
 
         foreach (var row in job.Rows)
         {
@@ -50,12 +66,31 @@ public class BatchProcessorService
             var (emails, phones) = ContactRankerService.Rank(results);
             row.RankedEmails = emails;
             row.RankedPhones = phones;
-            row.Status       = results.Any(r => r.Success) ? RowStatus.Complete : RowStatus.Failed;
+
+            if (results.Any(r => r.Success))
+            {
+                row.Status = RowStatus.Complete;
+            }
+            else
+            {
+                row.Status = RowStatus.Failed;
+                row.Error  = string.Join("; ", results
+                    .Where(r => r.Error is not null)
+                    .Select(r => $"{r.SourceName}: {r.Error}"));
+            }
 
             await onRowComplete();
         }
 
         job.IsRunning = false;
         await onRowComplete();
+    }
+
+    private IEnumerable<IContactSource> ActiveSources()
+    {
+        var sources = _settings.DemoMode
+            ? _sources.Where(s => s is DemoContactSource)
+            : _sources.Where(s => s is not DemoContactSource);
+        return sources.Where(s => _settings.IsSourceEnabled(s.Name));
     }
 }

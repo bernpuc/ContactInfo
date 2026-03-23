@@ -10,17 +10,76 @@
 
     <h6 class="text-muted mb-3">API Keys</h6>
 
-    <div class="mb-4">
-        <label class="form-label">Apollo.io API Key</label>
+    <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+            <label class="form-label mb-0">Apollo.io API Key</label>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="apolloEnabled" @bind="ApolloEnabled" />
+                <label class="form-check-label small text-muted" for="apolloEnabled">Enabled</label>
+            </div>
+        </div>
         <input class="form-control font-monospace"
                type="password"
                placeholder="Enter your Apollo API key"
-               @bind="ApolloKey" />
+               @bind="ApolloKey"
+               disabled="@(!ApolloEnabled)" />
         <div class="form-text">
             Found at <a href="https://app.apollo.io/#/settings/integrations/api" target="_blank">
                 Settings → Integrations → API
             </a> in your Apollo account.
             Free plan includes 100 email credits/month (10,000 with a business email).
+        </div>
+    </div>
+
+    <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+            <label class="form-label mb-0">RocketReach API Key</label>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="rocketReachEnabled" @bind="RocketReachEnabled" />
+                <label class="form-check-label small text-muted" for="rocketReachEnabled">Enabled</label>
+            </div>
+        </div>
+        <input class="form-control font-monospace"
+               type="password"
+               placeholder="Enter your RocketReach API key"
+               @bind="RocketReachKey"
+               disabled="@(!RocketReachEnabled)" />
+        <div class="form-text">
+            Found at <a href="https://rocketreach.co/api" target="_blank">
+                rocketreach.co/api
+            </a> under your account settings.
+        </div>
+    </div>
+
+    <div class="border rounded p-3 mb-3">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+            <label class="form-label mb-0">SignalHire API Key</label>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="signalHireEnabled" @bind="SignalHireEnabled" />
+                <label class="form-check-label small text-muted" for="signalHireEnabled">Enabled</label>
+            </div>
+        </div>
+        <input class="form-control font-monospace"
+               type="password"
+               placeholder="Enter your SignalHire API key"
+               @bind="SignalHireKey"
+               disabled="@(!SignalHireEnabled)" />
+        <div class="form-text">
+            Found at <a href="https://www.signalhire.com/profile#api" target="_blank">
+                signalhire.com/profile#api
+            </a> under your account settings.
+        </div>
+    </div>
+
+    <h6 class="text-muted mb-3 mt-2">General</h6>
+
+    <div class="mb-4">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="demoMode" @bind="DemoModeEnabled" />
+            <label class="form-check-label" for="demoMode">Demo mode</label>
+        </div>
+        <div class="form-text">
+            Uses fake generated contacts instead of calling real APIs. Useful for testing the UI without consuming API credits.
         </div>
     </div>
 
@@ -33,17 +92,30 @@
 </div>
 
 @code {
-    private string ApolloKey = "";
-    private bool   Saved     = false;
+    private string ApolloKey          = "";
+    private string RocketReachKey     = "";
+    private string SignalHireKey      = "";
+    private bool   DemoModeEnabled    = true;
+    private bool   ApolloEnabled      = true;
+    private bool   RocketReachEnabled = true;
+    private bool   SignalHireEnabled  = true;
+    private bool   Saved              = false;
 
     protected override void OnInitialized()
     {
-        ApolloKey = UserSettings.ApolloApiKey;
+        ApolloKey          = UserSettings.ApolloApiKey;
+        RocketReachKey     = UserSettings.RocketReachApiKey;
+        SignalHireKey      = UserSettings.SignalHireApiKey;
+        DemoModeEnabled    = UserSettings.DemoMode;
+        ApolloEnabled      = UserSettings.ApolloEnabled;
+        RocketReachEnabled = UserSettings.RocketReachEnabled;
+        SignalHireEnabled  = UserSettings.SignalHireEnabled;
     }
 
     private void Save()
     {
-        UserSettings.Save(ApolloKey);
+        UserSettings.Save(ApolloKey, RocketReachKey, SignalHireKey,
+                          DemoModeEnabled, ApolloEnabled, RocketReachEnabled, SignalHireEnabled);
         Saved = true;
     }
 }

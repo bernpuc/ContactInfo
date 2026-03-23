@@ -16,7 +16,9 @@ builder.Services.AddSingleton<IExcelService, ExcelService>();
 builder.Services.AddScoped<BatchProcessorService>();
 
 // Register each lookup source — add more here as new providers are integrated
-// builder.Services.AddHttpClient<IContactSource, ApolloService>();   // re-enable with a paid Apollo plan
+builder.Services.AddHttpClient<IContactSource, ApolloService>();
+builder.Services.AddHttpClient<IContactSource, RocketReachService>();
+builder.Services.AddHttpClient<IContactSource, SignalHireService>();
 
 // Demo sources — remove when real providers are configured
 builder.Services.AddSingleton<IContactSource>(new DemoContactSource("DemoA", variant: 1));
