@@ -1,0 +1,472 @@
+@page "/"
+@using ContactInfo.Models
+@using ContactInfo.Services
+@using ContactInfo.Services.Interfaces
+@using Microsoft.AspNetCore.Components.Forms
+@inject IEnumerable<IContactSource> Sources
+@inject BatchProcessorService BatchProcessor
+@inject IExcelService ExcelService
+@inject IJSRuntime JS
+@rendermode InteractiveServer
+
+<PageTitle>Contact Lookup</PageTitle>
+
+<div class="container-fluid px-4 py-3">
+
+    <!-- ── Tab headers ──────────────────────────────────────────────────────── -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == Tab.Single ? "active" : "")"
+                    @onclick="@(() => ActiveTab = Tab.Single)">Single Lookup</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(ActiveTab == Tab.Batch ? "active" : "")"
+                    @onclick="@(() => ActiveTab = Tab.Batch)">Batch Import</button>
+        </li>
+    </ul>
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         SINGLE LOOKUP TAB
+         ════════════════════════════════════════════════════════════════════════ -->
+    @if (ActiveTab == Tab.Single)
+    {
+        <div class="row g-2 align-items-end mb-4">
+            <div class="col-md-8">
+                <label class="form-label mb-1 small text-muted">LinkedIn Profile URL</label>
+                <input class="form-control"
+                       type="url"
+                       placeholder="https://www.linkedin.com/in/username"
+                       @bind="SingleUrl"
+                       @bind:event="oninput"
+                       @onkeydown="OnSingleKeyDown"
+                       disabled="@SingleLoading" />
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary"
+                        @onclick="RunSingleLookup"
+                        disabled="@(SingleLoading || string.IsNullOrWhiteSpace(SingleUrl))">
+                    @if (SingleLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                        <span>Looking up…</span>
+                    }
+                    else { <span>Look Up</span> }
+                </button>
+            </div>
+            @if (SingleRow is not null && !SingleLoading)
+            {
+                <div class="col-auto">
+                    <button class="btn btn-outline-secondary" @onclick="ClearSingle">Clear</button>
+                </div>
+            }
+        </div>
+
+        @if (SingleError is not null)
+        {
+            <div class="alert alert-warning py-2 small mb-3">@SingleError</div>
+        }
+
+        @if (SingleRow is not null)
+        {
+            <!-- Profile header -->
+            <div class="mb-4 p-3 border rounded bg-light">
+                <div class="fw-semibold fs-5">@(SingleRow.Name ?? "Unknown")</div>
+                @if (SingleRow.Title is not null || SingleRow.Company is not null)
+                {
+                    <div class="text-muted small">
+                        @SingleRow.Title@(SingleRow.Title is not null && SingleRow.Company is not null ? " · " : "")@SingleRow.Company
+                    </div>
+                }
+                <a href="@SingleRow.LinkedInUrl" target="_blank" class="small">@SingleRow.LinkedInUrl</a>
+            </div>
+
+            <!-- Ranked emails -->
+            <h6 class="mb-2">
+                Emails
+                <span class="badge bg-secondary rounded-pill ms-1">@SingleRow.RankedEmails.Count</span>
+            </h6>
+            @if (SingleRow.RankedEmails.Count == 0)
+            {
+                <p class="text-muted small">No emails found.</p>
+            }
+            else
+            {
+                <table class="table table-sm table-hover mb-4">
+                    <thead class="table-light">
+                        <tr><th>Email</th><th>Found On</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var e in SingleRow.RankedEmails)
+                        {
+                            <tr class="@(e.IsMultiSource ? "table-success" : "")">
+                                <td><code>@e.Value</code></td>
+                                <td class="small">@string.Join(", ", e.FoundOnSources)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+            <!-- Ranked phones -->
+            <h6 class="mb-2">
+                Phones
+                <span class="badge bg-secondary rounded-pill ms-1">@SingleRow.RankedPhones.Count</span>
+            </h6>
+            @if (SingleRow.RankedPhones.Count == 0)
+            {
+                <p class="text-muted small">No phone numbers found.</p>
+            }
+            else
+            {
+                <table class="table table-sm table-hover mb-4">
+                    <thead class="table-light">
+                        <tr><th>Phone</th><th>Found On</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in SingleRow.RankedPhones)
+                        {
+                            <tr class="@(p.IsMultiSource ? "table-success" : "")">
+                                <td><code>@p.Value</code></td>
+                                <td class="small">@string.Join(", ", p.FoundOnSources)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+            <!-- Per-source breakdown -->
+            @if (SingleRow.SourceResults.Count > 0)
+            {
+                <h6 class="mb-2 mt-3">Source Breakdown</h6>
+                <div class="row g-2">
+                    @foreach (var (sourceName, result) in SingleRow.SourceResults)
+                    {
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="fw-semibold mb-2">
+                                    @sourceName
+                                    @if (result.Success)
+                                    {
+                                        <span class="badge bg-success ms-1">✓</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary ms-1">✗</span>
+                                    }
+                                </div>
+                                @if (result.Error is not null)
+                                {
+                                    <p class="text-muted small mb-0">@result.Error</p>
+                                }
+                                else
+                                {
+                                    @if (result.Emails.Count > 0)
+                                    {
+                                        <div class="small mb-1">
+                                            <span class="text-muted">Emails: </span>
+                                            @string.Join(", ", result.Emails)
+                                        </div>
+                                    }
+                                    @if (result.Phones.Count > 0)
+                                    {
+                                        <div class="small">
+                                            <span class="text-muted">Phones: </span>
+                                            @string.Join(", ", result.Phones)
+                                        </div>
+                                    }
+                                    @if (result.Emails.Count == 0 && result.Phones.Count == 0)
+                                    {
+                                        <p class="text-muted small mb-0">No contacts found.</p>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+                <p class="text-muted small mt-3">
+                    <span class="badge bg-success me-1"> </span> Green = found on multiple sources.
+                </p>
+            }
+        }
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════════════
+         BATCH IMPORT TAB
+         ════════════════════════════════════════════════════════════════════════ -->
+    @if (ActiveTab == Tab.Batch)
+    {
+        <!-- File upload -->
+        <div class="row g-2 align-items-end mb-3">
+            <div class="col-12 mb-1">
+                <button class="btn btn-outline-secondary btn-sm" @onclick="DownloadSample">
+                    Download Sample Excel
+                </button>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label mb-1 small text-muted">
+                    Excel file — LinkedIn URLs must be in column A (row 1 = header)
+                </label>
+                <InputFile class="form-control" OnChange="OnFileSelected" accept=".xlsx,.xls"
+                           disabled="@(Job?.IsRunning == true)" />
+            </div>
+            @if (BatchUrls.Count > 0)
+            {
+                <div class="col-auto">
+                    <span class="text-muted small">@BatchUrls.Count URL@(BatchUrls.Count == 1 ? "" : "s") loaded</span>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary"
+                            @onclick="RunBatch"
+                            disabled="@(Job?.IsRunning == true)">
+                        @if (Job?.IsRunning == true)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Processing…</span>
+                        }
+                        else { <span>Process</span> }
+                    </button>
+                </div>
+            }
+            @if (Job is not null && !Job.IsRunning && Job.Rows.Count > 0)
+            {
+                <div class="col-auto">
+                    <button class="btn btn-success" @onclick="ExportToExcel">Export to Excel</button>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-outline-secondary" @onclick="ClearBatch">Clear</button>
+                </div>
+            }
+        </div>
+
+        @if (BatchError is not null)
+        {
+            <div class="alert alert-warning py-2 small mb-3">@BatchError</div>
+        }
+
+        @if (Job is not null && Job.Rows.Count > 0)
+        {
+            <!-- Progress bar -->
+            @if (Job.IsRunning || Job.ProcessedCount > 0)
+            {
+                var pct = Job.Rows.Count > 0 ? (int)(Job.ProcessedCount * 100.0 / Job.Rows.Count) : 0;
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small text-muted mb-1">
+                        <span>@Job.ProcessedCount / @Job.Rows.Count processed</span>
+                        <span>@pct%</span>
+                    </div>
+                    <div class="progress" style="height:8px">
+                        <div class="progress-bar @(Job.IsRunning ? "progress-bar-animated progress-bar-striped" : "")"
+                             style="width:@(pct)%"></div>
+                    </div>
+                </div>
+            }
+
+            <!-- Results grid -->
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover small">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="min-width:200px">LinkedIn URL</th>
+                            <th>Name</th>
+                            <th>Title</th>
+                            <th>Company</th>
+                            @foreach (var src in Job.SourceNames)
+                            {
+                                <th>@src Emails</th>
+                                <th>@src Phones</th>
+                            }
+                            <th style="min-width:200px">Top Emails</th>
+                            <th>Top Phones</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Job.Rows)
+                        {
+                            <tr>
+                                <td class="text-truncate" style="max-width:220px" title="@row.LinkedInUrl">
+                                    <a href="@row.LinkedInUrl" target="_blank">@ShortUrl(row.LinkedInUrl)</a>
+                                </td>
+                                <td>@(row.Name ?? "")</td>
+                                <td>@(row.Title ?? "")</td>
+                                <td>@(row.Company ?? "")</td>
+
+                                @foreach (var src in Job.SourceNames)
+                                {
+                                    var res = row.SourceResults.GetValueOrDefault(src);
+                                    <td>@(res is not null ? string.Join(", ", res.Emails) : "")</td>
+                                    <td>@(res is not null ? string.Join(", ", res.Phones) : "")</td>
+                                }
+
+                                <td class="@(row.RankedEmails.Any(e => e.IsMultiSource) ? "table-success fw-semibold" : "")">
+                                    @string.Join(", ", row.RankedEmails.Select(e => e.Value))
+                                </td>
+                                <td class="@(row.RankedPhones.Any(p => p.IsMultiSource) ? "table-success fw-semibold" : "")">
+                                    @string.Join(", ", row.RankedPhones.Select(p => p.Value))
+                                </td>
+                                <td>
+                                    @switch (row.Status)
+                                    {
+                                        case RowStatus.Pending:
+                                            <span class="text-muted">—</span>
+                                            break;
+                                        case RowStatus.Processing:
+                                            <span class="spinner-border spinner-border-sm text-primary"></span>
+                                            break;
+                                        case RowStatus.Complete:
+                                            <span class="text-success">✓</span>
+                                            break;
+                                        case RowStatus.Failed:
+                                            <span class="text-danger" title="@row.Error">✗</span>
+                                            break;
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="text-muted small mt-2">
+                <span class="badge bg-success me-1"> </span> Green = found on multiple sources.
+            </p>
+        }
+    }
+</div>
+
+@code {
+    // ── Tab state ────────────────────────────────────────────────────────────
+    private enum Tab { Single, Batch }
+    private Tab ActiveTab = Tab.Single;
+
+    // ── Single lookup ────────────────────────────────────────────────────────
+    private string    SingleUrl     = "";
+    private bool      SingleLoading = false;
+    private string?   SingleError   = null;
+    private BatchRow? SingleRow     = null;
+
+    private async Task OnSingleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await RunSingleLookup();
+    }
+
+    private async Task RunSingleLookup()
+    {
+        if (string.IsNullOrWhiteSpace(SingleUrl)) return;
+
+        SingleLoading = true;
+        SingleError   = null;
+        SingleRow     = null;
+        StateHasChanged();
+
+        var url     = SingleUrl.Trim().TrimEnd('/');
+        var sources = Sources.ToList();
+        var tasks   = sources.Select(s => s.LookupAsync(url));
+        var results = await Task.WhenAll(tasks);
+
+        var row = new BatchRow { LinkedInUrl = url };
+        foreach (var result in results)
+        {
+            row.SourceResults[result.SourceName] = result;
+            if (row.Name is null && result.Name is not null)
+            {
+                row.Name    = result.Name;
+                row.Title   = result.Title;
+                row.Company = result.Company;
+            }
+        }
+
+        var (emails, phones) = ContactRankerService.Rank(results);
+        row.RankedEmails = emails;
+        row.RankedPhones = phones;
+        row.Status       = results.Any(r => r.Success) ? RowStatus.Complete : RowStatus.Failed;
+
+        if (row.Status == RowStatus.Failed)
+            SingleError = results.FirstOrDefault(r => r.Error is not null)?.Error;
+
+        SingleRow     = row;
+        SingleLoading = false;
+    }
+
+    private void ClearSingle()
+    {
+        SingleRow   = null;
+        SingleUrl   = "";
+        SingleError = null;
+    }
+
+    // ── Batch ────────────────────────────────────────────────────────────────
+    private List<string> BatchUrls  = new();
+    private string?      BatchError = null;
+    private BatchJob?    Job        = null;
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        BatchError = null;
+        BatchUrls  = new();
+        Job        = null;
+
+        try
+        {
+            using var stream = e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            using var ms     = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            ms.Position = 0;
+            BatchUrls   = ExcelService.ReadLinkedInUrls(ms);
+
+            if (BatchUrls.Count == 0)
+                BatchError = "No URLs found in column A. Make sure row 1 is a header and URLs start in row 2.";
+        }
+        catch (Exception ex)
+        {
+            BatchError = $"Could not read file: {ex.Message}";
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task RunBatch()
+    {
+        if (BatchUrls.Count == 0) return;
+
+        Job = new BatchJob
+        {
+            Rows = BatchUrls.Select(u => new BatchRow { LinkedInUrl = u }).ToList()
+        };
+        StateHasChanged();
+
+        await BatchProcessor.ProcessAsync(Job, async () =>
+        {
+            await InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private async Task ExportToExcel()
+    {
+        if (Job is null) return;
+        var bytes   = ExcelService.ExportBatch(Job);
+        var base64  = Convert.ToBase64String(bytes);
+        var filename = $"ContactInfo_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        await JS.InvokeVoidAsync("downloadFile", filename, base64);
+    }
+
+    private void ClearBatch()
+    {
+        Job        = null;
+        BatchUrls  = new();
+        BatchError = null;
+    }
+
+    private async Task DownloadSample()
+    {
+        var bytes  = ExcelService.GenerateSampleImport();
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFile", "ContactInfo_Sample.xlsx", base64);
+    }
+
+    private static string ShortUrl(string url)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(url, @"linkedin\.com/in/([^/?]+)");
+        return m.Success ? m.Groups[1].Value : url;
+    }
+}

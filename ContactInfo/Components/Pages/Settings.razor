@@ -1,0 +1,49 @@
+@page "/settings"
+@using ContactInfo.Services.Interfaces
+@inject IUserSettingsService UserSettings
+@rendermode InteractiveServer
+
+<PageTitle>Settings</PageTitle>
+
+<div class="container-fluid px-4 py-3" style="max-width:600px">
+    <h4 class="mb-4">Settings</h4>
+
+    <h6 class="text-muted mb-3">API Keys</h6>
+
+    <div class="mb-4">
+        <label class="form-label">Apollo.io API Key</label>
+        <input class="form-control font-monospace"
+               type="password"
+               placeholder="Enter your Apollo API key"
+               @bind="ApolloKey" />
+        <div class="form-text">
+            Found at <a href="https://app.apollo.io/#/settings/integrations/api" target="_blank">
+                Settings → Integrations → API
+            </a> in your Apollo account.
+            Free plan includes 100 email credits/month (10,000 with a business email).
+        </div>
+    </div>
+
+    <button class="btn btn-primary" @onclick="Save">Save</button>
+
+    @if (Saved)
+    {
+        <span class="ms-3 text-success small">Saved.</span>
+    }
+</div>
+
+@code {
+    private string ApolloKey = "";
+    private bool   Saved     = false;
+
+    protected override void OnInitialized()
+    {
+        ApolloKey = UserSettings.ApolloApiKey;
+    }
+
+    private void Save()
+    {
+        UserSettings.Save(ApolloKey);
+        Saved = true;
+    }
+}
