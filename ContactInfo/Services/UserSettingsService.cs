@@ -18,10 +18,12 @@ public class UserSettingsService : IUserSettingsService
         _data = Load(fallback.Value);
     }
 
-    public string ApolloApiKey       => _data.ApolloApiKey;
-    public string RocketReachApiKey  => _data.RocketReachApiKey;
-    public string SignalHireApiKey   => _data.SignalHireApiKey;
-    public bool   DemoMode           => _data.DemoMode;
+    public string ApolloApiKey          => _data.ApolloApiKey;
+    public string RocketReachApiKey     => _data.RocketReachApiKey;
+    public string SignalHireApiKey       => _data.SignalHireApiKey;
+    public string WebhookCallbackUrl     => _data.WebhookCallbackUrl;
+    public string WebhookRelayPollUrl    => _data.WebhookRelayPollUrl;
+    public bool   DemoMode              => _data.DemoMode;
     public bool   ApolloEnabled      => _data.ApolloEnabled;
     public bool   RocketReachEnabled => _data.RocketReachEnabled;
     public bool   SignalHireEnabled  => _data.SignalHireEnabled;
@@ -35,6 +37,7 @@ public class UserSettingsService : IUserSettingsService
     };
 
     public void Save(string apolloApiKey, string rocketReachApiKey, string signalHireApiKey,
+                     string webhookCallbackUrl, string webhookRelayPollUrl,
                      bool demoMode, bool apolloEnabled, bool rocketReachEnabled, bool signalHireEnabled)
     {
         _data = new UserSettingsData
@@ -42,10 +45,12 @@ public class UserSettingsService : IUserSettingsService
             ApolloApiKey       = apolloApiKey,
             RocketReachApiKey  = rocketReachApiKey,
             SignalHireApiKey   = signalHireApiKey,
-            DemoMode           = demoMode,
-            ApolloEnabled      = apolloEnabled,
-            RocketReachEnabled = rocketReachEnabled,
-            SignalHireEnabled  = signalHireEnabled
+            WebhookCallbackUrl = webhookCallbackUrl,
+            WebhookRelayPollUrl = webhookRelayPollUrl,
+            DemoMode               = demoMode,
+            ApolloEnabled          = apolloEnabled,
+            RocketReachEnabled     = rocketReachEnabled,
+            SignalHireEnabled      = signalHireEnabled
         };
         Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
         File.WriteAllText(SettingsPath,
@@ -75,12 +80,14 @@ public class UserSettingsService : IUserSettingsService
 
     private class UserSettingsData
     {
-        public string ApolloApiKey       { get; set; } = "";
-        public string RocketReachApiKey  { get; set; } = "";
-        public string SignalHireApiKey   { get; set; } = "";
-        public bool   DemoMode           { get; set; } = true;
-        public bool   ApolloEnabled      { get; set; } = true;
-        public bool   RocketReachEnabled { get; set; } = true;
-        public bool   SignalHireEnabled  { get; set; } = true;
+        public string ApolloApiKey          { get; set; } = "";
+        public string RocketReachApiKey     { get; set; } = "";
+        public string SignalHireApiKey       { get; set; } = "";
+        public string WebhookCallbackUrl     { get; set; } = "";
+        public string WebhookRelayPollUrl    { get; set; } = "";
+        public bool   DemoMode              { get; set; } = true;
+        public bool   ApolloEnabled         { get; set; } = true;
+        public bool   RocketReachEnabled    { get; set; } = true;
+        public bool   SignalHireEnabled     { get; set; } = true;
     }
 }

@@ -148,6 +148,23 @@ Keys are stored on your computer at `%APPDATA%\ContactInfo\user-settings.json` a
 
 ---
 
+## Step 10 — Set Up the Webhook Relay (SignalHire only)
+
+SignalHire does not return results directly — it POSTs them to a callback URL. You need a webhook relay to receive those results.
+
+1. Go to **https://webhook.site** in your browser
+2. You will be given a unique URL, e.g. `https://webhook.site/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+3. Copy that URL
+4. In the app, click **Settings** and scroll to **Webhook Relay**
+5. Paste the URL into the **Callback URL** field — the **Relay Poll URL** will fill in automatically
+6. Click **Save**
+
+> **Important:** Free webhook.site URLs expire after **7 days**. When that happens, the Settings page will show a warning. Simply get a new URL from webhook.site, paste it into the Callback URL field, and save again.
+
+If SignalHire is not enabled, you can skip this step.
+
+---
+
 ## Making and Saving Changes
 
 When you edit a file and want to save your changes to GitHub:

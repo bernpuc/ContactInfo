@@ -1,6 +1,8 @@
 @page "/settings"
 @using ContactInfo.Services.Interfaces
+@using System.Text.RegularExpressions
 @inject IUserSettingsService UserSettings
+@inject IHttpClientFactory HttpClientFactory
 @rendermode InteractiveServer
 
 <PageTitle>Settings</PageTitle>
@@ -68,6 +70,66 @@
             Found at <a href="https://www.signalhire.com/profile#api" target="_blank">
                 signalhire.com/profile#api
             </a> under your account settings.
+            SignalHire delivers results via the Webhook Relay configured below.
+        </div>
+    </div>
+
+    <h6 class="text-muted mb-3 mt-2">Webhook Relay</h6>
+
+    <div class="border rounded p-3 mb-3">
+        @if (_webhookExpired == true)
+        {
+            <div class="alert alert-warning py-2 small mb-3">
+                <strong>Webhook relay URL has expired or is unreachable.</strong>
+                Get a new URL from <a href="https://webhook.site" target="_blank">webhook.site</a>
+                and paste it into the Callback URL field below.
+            </div>
+        }
+
+        <p class="small text-muted mb-3">
+            Some providers (e.g. SignalHire) deliver results by POSTing to a callback URL rather than
+            returning them directly. Configure a webhook relay here so the app can receive those results.
+            <a href="https://webhook.site" target="_blank">webhook.site</a> provides a free URL —
+            paste it below and the relay poll URL will be filled in automatically.
+        </p>
+
+        <label class="form-label mb-1">
+            Callback URL <span class="text-danger">*</span>
+        </label>
+        <input class="form-control font-monospace @(SignalHireEnabled && string.IsNullOrWhiteSpace(WebhookCallbackUrl) ? "is-invalid" : "")"
+               type="url"
+               placeholder="https://webhook.site/your-uuid"
+               @bind="WebhookCallbackUrl" @bind:after="OnCallbackUrlChanged" />
+        @if (SignalHireEnabled && string.IsNullOrWhiteSpace(WebhookCallbackUrl))
+        {
+            <div class="invalid-feedback">Required when SignalHire is enabled.</div>
+        }
+        <div class="form-text">
+            The URL that API providers POST their results to.
+        </div>
+
+        <label class="form-label mt-3 mb-1">Relay Poll URL
+            @if (WebhookCallbackUrl.Contains("webhook.site"))
+            {
+                <span class="text-success small ms-2">(auto-derived from webhook.site URL)</span>
+            }
+            else if (!string.IsNullOrWhiteSpace(WebhookCallbackUrl))
+            {
+                <span class="text-warning small ms-2">(required for non-webhook.site relays)</span>
+            }
+            else
+            {
+                <span class="text-muted fw-normal small ms-2">(leave blank if using webhook.site)</span>
+            }
+        </label>
+        <input class="form-control font-monospace"
+               type="url"
+               placeholder="https://webhook.site/token/your-uuid/requests"
+               @bind="WebhookRelayPollUrl"
+               disabled="@(WebhookCallbackUrl.Contains("webhook.site"))" />
+        <div class="form-text">
+            The URL this app polls to retrieve results. Auto-derived for webhook.site;
+            for other relay services enter their API endpoint here.
         </div>
     </div>
 
@@ -92,29 +154,72 @@
 </div>
 
 @code {
-    private string ApolloKey          = "";
-    private string RocketReachKey     = "";
-    private string SignalHireKey      = "";
-    private bool   DemoModeEnabled    = true;
-    private bool   ApolloEnabled      = true;
-    private bool   RocketReachEnabled = true;
-    private bool   SignalHireEnabled  = true;
-    private bool   Saved              = false;
+    private string ApolloKey             = "";
+    private string RocketReachKey        = "";
+    private string SignalHireKey         = "";
+    private string WebhookCallbackUrl    = "";
+    private string WebhookRelayPollUrl   = "";
+    private bool   DemoModeEnabled       = true;
+    private bool   ApolloEnabled         = true;
+    private bool   RocketReachEnabled    = true;
+    private bool   SignalHireEnabled     = true;
+    private bool   Saved                 = false;
+    private bool?  _webhookExpired       = null; // null=unchecked, false=ok, true=expired
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        ApolloKey          = UserSettings.ApolloApiKey;
-        RocketReachKey     = UserSettings.RocketReachApiKey;
-        SignalHireKey      = UserSettings.SignalHireApiKey;
-        DemoModeEnabled    = UserSettings.DemoMode;
-        ApolloEnabled      = UserSettings.ApolloEnabled;
-        RocketReachEnabled = UserSettings.RocketReachEnabled;
-        SignalHireEnabled  = UserSettings.SignalHireEnabled;
+        ApolloKey           = UserSettings.ApolloApiKey;
+        RocketReachKey      = UserSettings.RocketReachApiKey;
+        SignalHireKey       = UserSettings.SignalHireApiKey;
+        WebhookCallbackUrl  = UserSettings.WebhookCallbackUrl;
+        WebhookRelayPollUrl = UserSettings.WebhookRelayPollUrl;
+        DemoModeEnabled     = UserSettings.DemoMode;
+        ApolloEnabled       = UserSettings.ApolloEnabled;
+        RocketReachEnabled  = UserSettings.RocketReachEnabled;
+        SignalHireEnabled   = UserSettings.SignalHireEnabled;
+
+        await CheckWebhookRelayAsync();
+    }
+
+    private async Task CheckWebhookRelayAsync()
+    {
+        var pollUrl = ResolveRelayPollUrl();
+        if (pollUrl is null) return;
+
+        try
+        {
+            var http     = HttpClientFactory.CreateClient();
+            var response = await http.GetAsync(pollUrl);
+            _webhookExpired = !response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            _webhookExpired = true;
+        }
+    }
+
+    private string? ResolveRelayPollUrl()
+    {
+        var m = Regex.Match(WebhookCallbackUrl, @"webhook\.site/([0-9a-f\-]{36})", RegexOptions.IgnoreCase);
+        if (m.Success)
+            return $"https://webhook.site/token/{m.Groups[1].Value}/requests";
+        return string.IsNullOrWhiteSpace(WebhookRelayPollUrl) ? null : WebhookRelayPollUrl;
+    }
+
+    private void OnCallbackUrlChanged()
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(
+            WebhookCallbackUrl,
+            @"webhook\.site/([0-9a-f\-]{36})",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (m.Success)
+            WebhookRelayPollUrl = $"https://webhook.site/token/{m.Groups[1].Value}/requests";
     }
 
     private void Save()
     {
         UserSettings.Save(ApolloKey, RocketReachKey, SignalHireKey,
+                          WebhookCallbackUrl, WebhookRelayPollUrl,
                           DemoModeEnabled, ApolloEnabled, RocketReachEnabled, SignalHireEnabled);
         Saved = true;
     }

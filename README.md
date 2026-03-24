@@ -13,11 +13,13 @@ A .NET 9 Blazor Server application that looks up contact information (emails, ph
 
 ## Supported Providers
 
-| Provider | API Docs |
-|---|---|
-| [Apollo.io](https://www.apollo.io) | [docs.apollo.io](https://docs.apollo.io/reference/people-enrichment) |
-| [RocketReach](https://rocketreach.co) | [rocketreach.co/api](https://rocketreach.co/api) |
-| [SignalHire](https://www.signalhire.com) | [signalhire.com/profile#api](https://www.signalhire.com/profile#api) |
+| Provider | Lookup Method | API Docs |
+|---|---|---|
+| [Apollo.io](https://www.apollo.io) | Direct response | [docs.apollo.io](https://docs.apollo.io/reference/people-enrichment) |
+| [RocketReach](https://rocketreach.co) | Polls until complete | [rocketreach.co/api](https://rocketreach.co/api) |
+| [SignalHire](https://www.signalhire.com) | Callback via webhook relay | [signalhire.com/profile#api](https://www.signalhire.com/profile#api) |
+
+All providers identify contacts by LinkedIn profile URL, which uniquely identifies a person. Name-based search is not supported.
 
 ## Requirements
 
@@ -32,13 +34,13 @@ dotnet run --project ContactInfo/ContactInfo.csproj
 
 Then open `https://localhost:7035` in your browser.
 
-Navigate to **Settings** to enter your API keys and configure which providers are enabled.
+Navigate to **Settings** to enter your API keys, configure which providers are enabled, and set up the webhook relay if using SignalHire.
 
 ## Configuration
 
-API keys are stored in `%APPDATA%\ContactInfo\user-settings.json` and never committed to source control.
+All settings are stored in `%APPDATA%\ContactInfo\user-settings.json` and never committed to source control. They are managed through the **Settings** page in the app.
 
-To pre-populate keys via environment/config, add them to `appsettings.json` under `AppSettings`:
+To pre-populate API keys via config (optional), add them to `appsettings.json` under `AppSettings`:
 
 ```json
 {
@@ -50,12 +52,23 @@ To pre-populate keys via environment/config, add them to `appsettings.json` unde
 }
 ```
 
+### SignalHire Webhook Relay
+
+SignalHire delivers results by POSTing to a callback URL rather than returning them in the API response. The app polls a webhook relay to retrieve those results. Configure this in **Settings → Webhook Relay**:
+
+- **Callback URL** — the URL SignalHire POSTs results to (e.g. a [webhook.site](https://webhook.site) URL)
+- **Relay Poll URL** — the URL the app polls to retrieve results; auto-derived when using webhook.site
+
+> **Note:** Free webhook.site URLs expire after 7 days and stop accepting requests after 100 hits. Update the Callback URL in Settings when this happens — the Settings page will show a warning if the relay is unreachable.
+
 ## Adding a New Provider
 
 1. Implement `IContactSource` in `Services/YourProviderService.cs`
 2. Register in `Program.cs`: `builder.Services.AddHttpClient<IContactSource, YourProviderService>();`
 3. Add API key and enabled flag to `AppSettings.cs`, `IUserSettingsService`, and `UserSettingsService`
 4. Add the UI section to `Components/Pages/Settings.razor`
+
+If the provider uses a callback pattern, read the shared `WebhookCallbackUrl` / `WebhookRelayPollUrl` from `IUserSettingsService` rather than adding provider-specific URL fields.
 
 See `ApolloService.cs`, `RocketReachService.cs`, or `SignalHireService.cs` as reference implementations.
 
