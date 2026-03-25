@@ -7,18 +7,33 @@ namespace ContactInfo.Services;
 public class ExcelService : IExcelService
 {
     /// <summary>
-    /// Reads LinkedIn URLs from column A of the first worksheet, skipping the header row.
+    /// Reads LinkedIn URLs from the first worksheet.
+    /// Looks for a header row containing a column whose header includes "linkedin" (case-insensitive).
+    /// Falls back to column A if no such header is found.
     /// </summary>
     public List<string> ReadLinkedInUrls(Stream stream)
     {
         using var wb  = new XLWorkbook(stream);
         var ws        = wb.Worksheets.First();
         var lastRow   = ws.LastRowUsed()?.RowNumber() ?? 1;
-        var urls      = new List<string>();
+        var lastCol   = ws.LastColumnUsed()?.ColumnNumber() ?? 1;
 
+        // Find the column whose header contains "linkedin"
+        int linkedInCol = 1; // default to column A
+        for (int c = 1; c <= lastCol; c++)
+        {
+            var header = ws.Cell(1, c).GetString().Trim();
+            if (header.Contains("linkedin", StringComparison.OrdinalIgnoreCase))
+            {
+                linkedInCol = c;
+                break;
+            }
+        }
+
+        var urls = new List<string>();
         for (int r = 2; r <= lastRow; r++)
         {
-            var val = ws.Cell(r, 1).GetString().Trim();
+            var val = ws.Cell(r, linkedInCol).GetString().Trim();
             if (!string.IsNullOrWhiteSpace(val))
                 urls.Add(val);
         }
