@@ -2,7 +2,7 @@
 ; Build with: installer\build.ps1  (requires Inno Setup 6)
 
 #define MyAppName      "ContactInfo"
-#define MyAppVersion   "1.0"
+#define MyAppVersion   "1.1.0"
 #define MyAppPublisher "bernpuc"
 #define MyAppExeName   "ContactInfo.exe"
 #define MyAppURL       "http://localhost:5100"

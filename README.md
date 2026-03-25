@@ -85,6 +85,24 @@ If the provider uses a callback pattern, read the shared `WebhookCallbackUrl` / 
 
 See `ApolloService.cs`, `RocketReachService.cs`, or `SignalHireService.cs` as reference implementations.
 
+## Changelog
+
+### v1.1.0
+- API keys encrypted at rest using Windows DPAPI (user-scoped; existing plaintext files migrate automatically on next save)
+- RocketReach API updated to current GET endpoint (`/api/v2/person/lookup`)
+- Rate limit retry with backoff for RocketReach (10s / 20s)
+- Webhook relay refactored to shared settings — any callback-based provider can reuse it
+- Settings page warns when webhook relay URL has expired or is unreachable
+- SignalHire URL matching fixed (scheme-insensitive comparison)
+- Windows installer (`ContactInfoSetup.exe`) — self-contained, no .NET required on target machine
+- Console window shows URL and Ctrl+C shutdown instructions on startup
+
+### v1.0.0
+- Initial release: Apollo.io, RocketReach, SignalHire lookup in parallel
+- Single URL and batch Excel import/export
+- Per-provider enable/disable, demo mode
+- SignalHire webhook relay via webhook.site
+
 ## Project Structure
 
 ```
