@@ -27,21 +27,30 @@ builder.Services.AddSingleton<IContactSource>(new DemoContactSource("DemoB", var
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment())
+var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+lifetime.ApplicationStarted.Register(() =>
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    var url = app.Urls.FirstOrDefault() ?? "http://localhost:5100";
+    Console.WriteLine();
+    Console.WriteLine("  ContactInfo is running.");
+    Console.WriteLine($"  URL: {url}");
+    Console.WriteLine();
+    Console.WriteLine("  Press Ctrl+C to shut down.");
+    Console.WriteLine();
 
-    // Open the browser automatically when the server is ready
-    var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
-    lifetime.ApplicationStarted.Register(() =>
+    if (!app.Environment.IsDevelopment())
     {
-        var url = app.Urls.FirstOrDefault() ?? "http://localhost:5100";
         Task.Run(() =>
         {
             try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
             catch { /* best-effort */ }
         });
-    });
+    }
+});
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
 }
 
 app.UseAntiforgery();

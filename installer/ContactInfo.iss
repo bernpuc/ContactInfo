@@ -3,7 +3,7 @@
 
 #define MyAppName      "ContactInfo"
 #define MyAppVersion   "1.0"
-#define MyAppPublisher "Your Company"
+#define MyAppPublisher "bernpuc"
 #define MyAppExeName   "ContactInfo.exe"
 #define MyAppURL       "http://localhost:5100"
 
