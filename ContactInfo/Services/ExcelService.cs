@@ -123,6 +123,63 @@ public class ExcelService : IExcelService
     }
 
     /// <summary>
+    /// Writes ranked emails and phones back into the original source file.
+    /// Finds columns headed "Email Address(es)" and "Phone #s" and updates
+    /// only those cells for rows whose LinkedIn URL matches a completed job row.
+    /// All other content in the file is left untouched.
+    /// </summary>
+    public byte[] UpdateSourceFile(byte[] sourceBytes, BatchJob job)
+    {
+        using var inMs = new MemoryStream(sourceBytes);
+        using var wb   = new XLWorkbook(inMs);
+        var ws         = wb.Worksheets.First();
+        var lastRow    = ws.LastRowUsed()?.RowNumber() ?? 1;
+        var lastCol    = ws.LastColumnUsed()?.ColumnNumber() ?? 1;
+
+        // Locate relevant columns from header row
+        int linkedInCol = 1, emailCol = 0, phoneCol = 0;
+        for (int c = 1; c <= lastCol; c++)
+        {
+            var header = ws.Cell(1, c).GetString().Trim();
+            if (header.Contains("linkedin", StringComparison.OrdinalIgnoreCase))
+                linkedInCol = c;
+            else if (header.Equals("Email Address(es)", StringComparison.OrdinalIgnoreCase))
+                emailCol = c;
+            else if (header.Equals("Phone #s", StringComparison.OrdinalIgnoreCase))
+                phoneCol = c;
+        }
+
+        // Nothing to write if neither target column exists
+        if (emailCol == 0 && phoneCol == 0)
+        {
+            using var unchanged = new MemoryStream();
+            wb.SaveAs(unchanged);
+            return unchanged.ToArray();
+        }
+
+        // Index completed rows by normalised LinkedIn URL
+        var lookup = job.Rows.ToDictionary(
+            r => r.LinkedInUrl.TrimEnd('/').ToLowerInvariant(),
+            r => r);
+
+        for (int r = 2; r <= lastRow; r++)
+        {
+            var cellUrl = ws.Cell(r, linkedInCol).GetString().Trim().TrimEnd('/').ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(cellUrl) || !lookup.TryGetValue(cellUrl, out var jobRow))
+                continue;
+
+            if (emailCol > 0)
+                ws.Cell(r, emailCol).Value = string.Join(", ", jobRow.RankedEmails.Select(e => e.Value));
+            if (phoneCol > 0)
+                ws.Cell(r, phoneCol).Value = string.Join(", ", jobRow.RankedPhones.Select(p => p.Value));
+        }
+
+        using var outMs = new MemoryStream();
+        wb.SaveAs(outMs);
+        return outMs.ToArray();
+    }
+
+    /// <summary>
     /// Generates a sample import file with demo LinkedIn URLs for testing.
     /// </summary>
     public byte[] GenerateSampleImport()

@@ -6,5 +6,6 @@ public interface IExcelService
 {
     List<string> ReadLinkedInUrls(Stream stream);
     byte[] ExportBatch(BatchJob job);
+    byte[] UpdateSourceFile(byte[] sourceBytes, BatchJob job);
     byte[] GenerateSampleImport();
 }
