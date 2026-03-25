@@ -16,10 +16,12 @@ A .NET 9 Blazor Server application that looks up contact information (emails, ph
 | Provider | Lookup Method | API Docs |
 |---|---|---|
 | [Apollo.io](https://www.apollo.io) | Direct response | [docs.apollo.io](https://docs.apollo.io/reference/people-enrichment) |
-| [RocketReach](https://rocketreach.co) | Polls until complete | [rocketreach.co/api](https://rocketreach.co/api) |
+| [RocketReach](https://rocketreach.co) | GET lookup, polls until complete | [docs.rocketreach.co](https://docs.rocketreach.co/reference/people-lookup-api) |
 | [SignalHire](https://www.signalhire.com) | Callback via webhook relay | [signalhire.com/profile#api](https://www.signalhire.com/profile#api) |
 
 All providers identify contacts by LinkedIn profile URL, which uniquely identifies a person. Name-based search is not supported.
+
+> **Free tier note:** Trial and free accounts typically have low quotas (e.g. RocketReach free gives ~5 lookups). The app retries automatically on rate limit errors with backoff, but a depleted quota requires waiting for the billing period to reset.
 
 ## Requirements
 

@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ContactInfo.Models;
@@ -7,14 +6,15 @@ using ContactInfo.Services.Interfaces;
 
 namespace ContactInfo.Services;
 
-// RocketReach API v2 — Profile Lookup
-// POST https://api.rocketreach.co/v2/api/lookupProfile
-// Docs: https://rocketreach.co/api
+// RocketReach API v2 — Person Lookup
+// GET https://api.rocketreach.co/api/v2/person/lookup?linkedin_url=...
+// Header: Api-Key: YOUR_KEY
+// Docs: https://docs.rocketreach.co/reference/people-lookup-api
 // May return status "searching" — poll until "complete" or "failed"
 
 public class RocketReachService : IContactSource
 {
-    private const string BaseUrl = "https://api.rocketreach.co/v2/api/lookupProfile";
+    private const string BaseUrl = "https://api.rocketreach.co/api/v2/person/lookup";
 
     public string Name => "RocketReach";
 
@@ -80,40 +80,55 @@ public class RocketReachService : IContactSource
 
     private async Task<RocketReachProfile?> PostLookup(string apiKey, string linkedInUrl, SourceResult result)
     {
-        var body    = JsonSerializer.Serialize(new { linkedin_url = linkedInUrl });
-        var request = new HttpRequestMessage(HttpMethod.Post, BaseUrl)
-        {
-            Content = new StringContent(body, Encoding.UTF8, "application/json")
-        };
-        request.Headers.Add("Api-Key", apiKey);
-
-        var response = await _http.SendAsync(request);
-        return await HandleResponse(response, result);
+        var url = $"{BaseUrl}?linkedin_url={Uri.EscapeDataString(linkedInUrl)}";
+        return await GetWithRetry(apiKey, url, result);
     }
 
     private async Task<RocketReachProfile?> PollUntilComplete(string apiKey, int id, SourceResult result)
     {
-        const int maxAttempts  = 10;
-        const int delayMs      = 2000;
+        const int maxAttempts = 10;
+        const int delayMs     = 2000;
 
         for (int i = 0; i < maxAttempts; i++)
         {
             await Task.Delay(delayMs);
 
-            var body    = JsonSerializer.Serialize(new { id });
-            var request = new HttpRequestMessage(HttpMethod.Post, BaseUrl)
-            {
-                Content = new StringContent(body, Encoding.UTF8, "application/json")
-            };
-            request.Headers.Add("Api-Key", apiKey);
-
-            var response = await _http.SendAsync(request);
-            var profile  = await HandleResponse(response, result);
+            var profile = await GetWithRetry(apiKey, $"{BaseUrl}?id={id}", result);
             if (profile is null) return null;
             if (profile.Status != "searching") return profile;
         }
 
         result.Error = "Lookup timed out waiting for RocketReach to complete.";
+        return null;
+    }
+
+    // Retries up to 3 times on 429, with increasing delays (10s, 20s, 30s).
+    private async Task<RocketReachProfile?> GetWithRetry(string apiKey, string url, SourceResult result)
+    {
+        const int maxRetries = 3;
+
+        for (int attempt = 0; attempt < maxRetries; attempt++)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("Api-Key", apiKey);
+
+            var response = await _http.SendAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                if (attempt < maxRetries - 1)
+                {
+                    await Task.Delay((attempt + 1) * 10_000); // 10s, 20s
+                    continue;
+                }
+                result.Error = "Rate limit exceeded — try again in a minute.";
+                return null;
+            }
+
+            return await HandleResponse(response, result);
+        }
+
+        result.Error = "Rate limit exceeded — try again in a minute.";
         return null;
     }
 
