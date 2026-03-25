@@ -23,18 +23,29 @@ All providers identify contacts by LinkedIn profile URL, which uniquely identifi
 
 > **Free tier note:** Trial and free accounts typically have low quotas (e.g. RocketReach free gives ~5 lookups). The app retries automatically on rate limit errors with backoff, but a depleted quota requires waiting for the billing period to reset.
 
-## Requirements
+## Installation
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9)
+### Windows Installer (recommended for end users)
 
-## Getting Started
+A self-contained Windows installer is provided — no .NET installation required on the target machine.
+
+**To build the installer:**
+1. Install [Inno Setup 6](https://jrsoftware.org/isinfo.php) (free)
+2. Run `.\installer\build.ps1` from the repo root in PowerShell
+3. Distribute `installer\Output\ContactInfoSetup.exe`
+
+The installer creates Start Menu and optional desktop shortcuts. When launched, the app opens automatically in the default browser at `http://localhost:5100`. A console window shows the URL and instructions — press **Ctrl+C** there to shut the app down.
+
+### Running from source (developers)
+
+Requires [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9).
 
 ```bash
 dotnet restore ContactInfo/ContactInfo.csproj
 dotnet run --project ContactInfo/ContactInfo.csproj
 ```
 
-Then open `https://localhost:7035` in your browser.
+The console will print the URL once the server is ready. Open it in your browser.
 
 Navigate to **Settings** to enter your API keys, configure which providers are enabled, and set up the webhook relay if using SignalHire.
 

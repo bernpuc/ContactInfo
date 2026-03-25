@@ -1,6 +1,8 @@
 # Development Environment Setup
 
-This guide walks you through setting up your Windows computer to run and modify the ContactInfo project from scratch. No prior experience is assumed.
+> **Just want to run the app?** Ask the repository owner for the `ContactInfoSetup.exe` installer. Run it, follow the prompts, and skip to [Step 9](#step-9--configure-api-keys). No programming tools required.
+
+This guide walks you through setting up your Windows computer to **run and modify** the ContactInfo project from scratch. No prior experience is assumed.
 
 ---
 
@@ -123,11 +125,14 @@ You need a GitHub account and permission to access the repository.
    ```
    dotnet run --project ContactInfo/ContactInfo.csproj
    ```
-3. Wait for a line that says something like:
+3. Wait until the terminal shows:
    ```
-   Now listening on: https://localhost:7035
+     ContactInfo is running.
+     URL: https://localhost:7035
+
+     Press Ctrl+C to shut down.
    ```
-4. Open your browser and go to **https://localhost:7035**
+4. Open your browser and go to the URL shown (e.g. `https://localhost:7035`)
 
    > Your browser may show a security warning about the certificate. This is normal for local development — click **Advanced** then **Proceed** (or equivalent in your browser).
 
