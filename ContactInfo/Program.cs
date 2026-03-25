@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ContactInfo.Components;
 using ContactInfo.Models;
 using ContactInfo.Services;
@@ -29,6 +30,18 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
+
+    // Open the browser automatically when the server is ready
+    var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+    lifetime.ApplicationStarted.Register(() =>
+    {
+        var url = app.Urls.FirstOrDefault() ?? "http://localhost:5100";
+        Task.Run(() =>
+        {
+            try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+            catch { /* best-effort */ }
+        });
+    });
 }
 
 app.UseAntiforgery();
