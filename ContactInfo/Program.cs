@@ -1,8 +1,11 @@
 using System.Diagnostics;
+using System.Runtime.Versioning;
 using ContactInfo.Components;
 using ContactInfo.Models;
 using ContactInfo.Services;
 using ContactInfo.Services.Interfaces;
+
+[assembly: SupportedOSPlatform("windows")]
 
 var builder = WebApplication.CreateBuilder(args);
 
