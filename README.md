@@ -53,9 +53,11 @@ Navigate to **Settings** to enter your API keys, configure which providers are e
 
 ## Configuration
 
-All settings are stored in `%APPDATA%\ContactInfo\user-settings.json` and never committed to source control. They are managed through the **Settings** page in the app.
+All settings are stored in `%APPDATA%\ContactInfo\user-settings.json` and managed through the **Settings** page in the app. This file is never committed to source control.
 
-To pre-populate API keys via config (optional), add them to `appsettings.json` under `AppSettings`:
+**API keys are encrypted at rest** using Windows DPAPI (user-scoped). The encrypted values are only readable by the Windows user account that saved them. Existing plaintext settings files from earlier versions are migrated automatically on next save — no manual action required.
+
+To pre-populate API keys via config (optional), add them to `appsettings.json` under `AppSettings`. Keys entered this way are used as a fallback only and are not encrypted — prefer entering them through the Settings page:
 
 ```json
 {
