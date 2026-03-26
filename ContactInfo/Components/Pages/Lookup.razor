@@ -100,7 +100,13 @@
                         @foreach (var e in SingleRow.RankedEmails)
                         {
                             <tr class="@(e.IsMultiSource ? "table-success" : "")">
-                                <td><code>@e.Value</code></td>
+                                <td>
+                                    <code>@e.Value</code>
+                                    @if (e.Label is not null)
+                                    {
+                                        <span class="badge bg-secondary fw-normal ms-2">@e.Label</span>
+                                    }
+                                </td>
                                 <td class="small">@string.Join(", ", e.FoundOnSources)</td>
                             </tr>
                         }
@@ -127,7 +133,13 @@
                         @foreach (var p in SingleRow.RankedPhones)
                         {
                             <tr class="@(p.IsMultiSource ? "table-success" : "")">
-                                <td><code>@p.Value</code></td>
+                                <td>
+                                    <code>@p.Value</code>
+                                    @if (p.Label is not null)
+                                    {
+                                        <span class="badge bg-secondary fw-normal ms-2">@p.Label</span>
+                                    }
+                                </td>
                                 <td class="small">@string.Join(", ", p.FoundOnSources)</td>
                             </tr>
                         }
@@ -311,7 +323,7 @@
                                         }
                                         else
                                         {
-                                            @(res is not null ? string.Join(", ", res.Emails) : "")
+                                            @(res is not null ? string.Join(", ", res.Emails.Select(e => e.Label == null ? e.Value : $"{e.Value} ({e.Label})")) : "")
                                         }
                                     </td>
                                     <td>
@@ -321,16 +333,16 @@
                                         }
                                         else
                                         {
-                                            @(res is not null ? string.Join(", ", res.Phones) : "")
+                                            @(res is not null ? string.Join(", ", res.Phones.Select(p => p.Label == null ? p.Value : $"{p.Value} ({p.Label})")) : "")
                                         }
                                     </td>
                                 }
 
                                 <td class="@(row.RankedEmails.Any(e => e.IsMultiSource) ? "table-success fw-semibold" : "")">
-                                    @string.Join(", ", row.RankedEmails.Select(e => e.Value))
+                                    @string.Join(", ", row.RankedEmails.Select(e => e.Label == null ? e.Value : $"{e.Value} ({e.Label})"))
                                 </td>
                                 <td class="@(row.RankedPhones.Any(p => p.IsMultiSource) ? "table-success fw-semibold" : "")">
-                                    @string.Join(", ", row.RankedPhones.Select(p => p.Value))
+                                    @string.Join(", ", row.RankedPhones.Select(p => p.Label == null ? p.Value : $"{p.Value} ({p.Label})"))
                                 </td>
                                 <td>
                                     @switch (row.Status)

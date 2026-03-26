@@ -64,11 +64,11 @@ public class RocketReachService : IContactSource
 
             foreach (var e in profile.Emails ?? [])
                 if (!string.IsNullOrWhiteSpace(e.Email))
-                    result.Emails.Add(e.Email);
+                    result.Emails.Add(new LabeledValue(e.Email, e.Type));
 
             foreach (var p in profile.Phones ?? [])
                 if (!string.IsNullOrWhiteSpace(p.Number))
-                    result.Phones.Add(p.Number);
+                    result.Phones.Add(new LabeledValue(p.Number, p.Type));
         }
         catch (Exception ex)
         {

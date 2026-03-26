@@ -43,15 +43,15 @@ public class DemoContactSource : IContactSource
 
         if (_variant == 1)
         {
-            // DemoA: work email + phone
-            result.Emails.Add(workEmail);
-            result.Phones.Add(phone);
+            // DemoA: work email + mobile phone
+            result.Emails.Add(new LabeledValue(workEmail, "work"));
+            result.Phones.Add(new LabeledValue(phone, "mobile"));
         }
         else
         {
             // DemoB: same work email (creates multi-source match) + personal email
-            result.Emails.Add(workEmail);
-            result.Emails.Add(personalEmail);
+            result.Emails.Add(new LabeledValue(workEmail, "work"));
+            result.Emails.Add(new LabeledValue(personalEmail, "personal"));
         }
 
         return Task.FromResult(result);

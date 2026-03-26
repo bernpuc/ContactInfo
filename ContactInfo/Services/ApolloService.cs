@@ -91,15 +91,15 @@ public class ApolloService : IContactSource
             var emailSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var ce in person.Contact?.ContactEmails ?? [])
                 if (!string.IsNullOrWhiteSpace(ce.Email) && emailSet.Add(ce.Email))
-                    result.Emails.Add(ce.Email);
+                    result.Emails.Add(new LabeledValue(ce.Email));
 
             if (!string.IsNullOrWhiteSpace(person.Email) && emailSet.Add(person.Email))
-                result.Emails.Add(person.Email);
+                result.Emails.Add(new LabeledValue(person.Email));
 
-            // Phones
+            // Phones — Apollo does not return a personal/business label
             result.Phones = (person.Contact?.PhoneNumbers ?? [])
                 .Where(p => !string.IsNullOrWhiteSpace(p.SanitizedNumber))
-                .Select(p => p.SanitizedNumber!)
+                .Select(p => new LabeledValue(p.SanitizedNumber!))
                 .ToList();
         }
         catch (Exception ex)

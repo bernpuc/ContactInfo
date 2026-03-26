@@ -15,13 +15,14 @@ public static class ContactRankerService
     }
 
     private static List<RankedContact> RankValues(
-        IEnumerable<(string source, string value)> items)
+        IEnumerable<(string source, LabeledValue contact)> items)
     {
         return items
-            .GroupBy(x => x.value, StringComparer.OrdinalIgnoreCase)
+            .GroupBy(x => x.contact.Value, StringComparer.OrdinalIgnoreCase)
             .Select(g => new RankedContact
             {
-                Value          = g.First().value,
+                Value          = g.First().contact.Value,
+                Label          = g.Select(x => x.contact.Label).FirstOrDefault(l => l != null),
                 Score          = g.Select(x => x.source).Distinct(StringComparer.OrdinalIgnoreCase).Count(),
                 FoundOnSources = g.Select(x => x.source).Distinct(StringComparer.OrdinalIgnoreCase).ToList()
             })

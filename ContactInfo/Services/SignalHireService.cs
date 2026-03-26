@@ -75,8 +75,8 @@ public class SignalHireService : IContactSource
             foreach (var contact in candidate.Contacts ?? [])
             {
                 if (string.IsNullOrWhiteSpace(contact.Value)) continue;
-                if (contact.Type == "email") result.Emails.Add(contact.Value);
-                else if (contact.Type == "phone") result.Phones.Add(contact.Value);
+                if (contact.Type == "email") result.Emails.Add(new LabeledValue(contact.Value, contact.SubType));
+                else if (contact.Type == "phone") result.Phones.Add(new LabeledValue(contact.Value, contact.SubType));
             }
         }
         catch (Exception ex)

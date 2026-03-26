@@ -93,18 +93,18 @@ public class ExcelService : IExcelService
             {
                 var (ec, pc) = srcCols[src];
                 var result   = row.SourceResults.GetValueOrDefault(src);
-                ws.Cell(exRow, ec).Value = string.Join(", ", result?.Emails ?? []);
-                ws.Cell(exRow, pc).Value = string.Join(", ", result?.Phones ?? []);
+                ws.Cell(exRow, ec).Value = string.Join(", ", (result?.Emails ?? []).Select(Format));
+                ws.Cell(exRow, pc).Value = string.Join(", ", (result?.Phones ?? []).Select(Format));
             }
 
             // Top emails — green if any value came from multiple sources
             var topEmailCell = ws.Cell(exRow, topEmailCol);
-            topEmailCell.Value = string.Join(", ", row.RankedEmails.Select(e => e.Value));
+            topEmailCell.Value = string.Join(", ", row.RankedEmails.Select(Format));
             if (row.RankedEmails.Any(e => e.IsMultiSource))
                 topEmailCell.Style.Fill.BackgroundColor = XLColor.LightGreen;
 
             var topPhoneCell = ws.Cell(exRow, topPhoneCol);
-            topPhoneCell.Value = string.Join(", ", row.RankedPhones.Select(p => p.Value));
+            topPhoneCell.Value = string.Join(", ", row.RankedPhones.Select(Format));
             if (row.RankedPhones.Any(p => p.IsMultiSource))
                 topPhoneCell.Style.Fill.BackgroundColor = XLColor.LightGreen;
 
@@ -121,6 +121,12 @@ public class ExcelService : IExcelService
         wb.SaveAs(ms);
         return ms.ToArray();
     }
+
+    private static string Format(LabeledValue v) =>
+        v.Label is null ? v.Value : $"{v.Value} ({v.Label})";
+
+    private static string Format(RankedContact c) =>
+        c.Label is null ? c.Value : $"{c.Value} ({c.Label})";
 
     /// <summary>
     /// Writes ranked emails and phones back into the original source file.
