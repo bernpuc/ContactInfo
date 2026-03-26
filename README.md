@@ -7,8 +7,10 @@ A .NET 9 Blazor Server application that looks up contact information (emails, ph
 - Single URL lookup and batch Excel import
 - Parallel queries across all enabled providers
 - Deduplicates and ranks results — contacts found on multiple sources highlighted in green
+- Contact type labels (work, personal, mobile, direct) shown as badges where providers supply them
+- Export results to a new Excel file, or write them back into a copy of the source file
 - Per-source error reporting inline in results table
-- Demo mode for UI testing without consuming API credits
+- Demo mode covering all result combinations (multi-source match, email-only, phone-only, no results, etc.)
 - Per-provider enable/disable toggle in Settings
 
 ## Supported Providers
@@ -86,6 +88,14 @@ If the provider uses a callback pattern, read the shared `WebhookCallbackUrl` / 
 See `ApolloService.cs`, `RocketReachService.cs`, or `SignalHireService.cs` as reference implementations.
 
 ## Changelog
+
+### v1.2.0
+- Contact type labels (work, personal, mobile, direct) shown as badges on emails and phones
+  - RocketReach: phone `type` field; SignalHire: contact `subType` field
+  - Labels are display-only — deduplication and multi-source matching use the value only
+- Demo mode expanded to 8 scenarios covering every result combination; sample import file exercises all 8
+- Excel import auto-detects LinkedIn column by header name (previously assumed column A)
+- "Update Source File" button writes ranked results back into a copy of the uploaded source file
 
 ### v1.1.0
 - API keys encrypted at rest using Windows DPAPI (user-scoped; existing plaintext files migrate automatically on next save)

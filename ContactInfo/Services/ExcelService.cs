@@ -190,16 +190,18 @@ public class ExcelService : IExcelService
     /// </summary>
     public byte[] GenerateSampleImport()
     {
+        // Each URL ends with -sN to force a specific demo scenario (0–7),
+        // guaranteeing the sample file exercises every result combination.
         var sampleUrls = new[]
         {
-            "https://www.linkedin.com/in/sarah-johnson-4a2b",
-            "https://www.linkedin.com/in/michael-chen-8f3c",
-            "https://www.linkedin.com/in/emily-rodriguez-2d1e",
-            "https://www.linkedin.com/in/james-williams-9b4a",
-            "https://www.linkedin.com/in/olivia-martinez-7c5f",
-            "https://www.linkedin.com/in/daniel-thompson-3e2d",
-            "https://www.linkedin.com/in/ashley-brown-6a1b",
-            "https://www.linkedin.com/in/christopher-davis-5f8c",
+            "https://www.linkedin.com/in/sarah-johnson-s0",      // email + phone, both sources (both green)
+            "https://www.linkedin.com/in/michael-chen-s1",       // email matches both sources (email green)
+            "https://www.linkedin.com/in/emily-rodriguez-s2",    // phone matches both sources (phone green)
+            "https://www.linkedin.com/in/james-williams-s3",     // all single-source (nothing green)
+            "https://www.linkedin.com/in/olivia-martinez-s4",    // email only, single source
+            "https://www.linkedin.com/in/daniel-thompson-s5",    // phone only, single source
+            "https://www.linkedin.com/in/ashley-brown-s6",       // no contact info found
+            "https://www.linkedin.com/in/christopher-davis-s7",  // multiple emails + phones, single source
         };
 
         using var wb = new XLWorkbook();

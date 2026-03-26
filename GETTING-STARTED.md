@@ -74,9 +74,12 @@ The results table shows:
 
 ## 6. Batch Processing
 
-To look up multiple people at once, click **Lookup** and use the **Import Excel** button to upload a spreadsheet. The file needs a column with LinkedIn URLs — the app will prompt you to map it.
+To look up multiple people at once, click **Lookup** and use the **Import Excel** button to upload a spreadsheet. The file needs a column with LinkedIn URLs — the app automatically finds it by looking for a column header that contains "LinkedIn".
 
-The app processes each row one at a time and updates the table as results come in. When finished, click **Export Excel** to download the results.
+The app processes each row one at a time and updates the table as results come in. When finished you have two download options:
+
+- **Export Excel** — downloads a new file with all results
+- **Update Source File** — downloads a copy of the file you uploaded, with the ranked emails written into any "Email Address(es)" column and ranked phones into any "Phone #s" column. All other content in the file is preserved unchanged.
 
 ---
 
