@@ -89,6 +89,19 @@ If you want to explore the app without consuming API credits, go to **Settings**
 
 ---
 
+## Uninstalling
+
+Uninstall ContactInfo from **Windows Settings → Apps** or **Control Panel → Programs** as you would any other application.
+
+The uninstaller removes the program files but leaves your settings intact. Your API keys and configuration are stored separately in `%APPDATA%\ContactInfo\` and are not touched by the uninstaller. This means if you reinstall later, your keys will still be there.
+
+If you want a clean removal with no trace left behind, delete that folder manually after uninstalling:
+
+1. Press **Win + R**, type `%APPDATA%\ContactInfo`, and press Enter
+2. Delete the folder
+
+---
+
 ## Troubleshooting
 
 **No results from a provider**
