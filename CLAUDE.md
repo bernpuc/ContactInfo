@@ -133,3 +133,9 @@ Components/Layout/
 4. Add Settings UI section in `Components/Pages/Settings.razor`
 
 If the provider uses a callback, read `WebhookCallbackUrl`/`WebhookRelayPollUrl` from `IUserSettingsService` — do not add new URL fields.
+
+---
+
+## API Keys
+- Never read, log, or suggest hardcoding Apollo / RocketReach / SignalHire API keys
+- Keys live in `%APPDATA%\ContactInfo\user-settings.json`, DPAPI-encrypted; `appsettings.json` is a dev-only fallback with empty keys by default
