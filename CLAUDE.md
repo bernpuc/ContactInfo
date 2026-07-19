@@ -4,6 +4,18 @@ A .NET 9 Blazor Server application that looks up contact information (emails, ph
 
 ---
 
+## Project Status
+
+**Phase: single-install-per-user pilot.** Each user runs their own local instance (`%APPDATA%\ContactInfo\user-settings.json` holds their own API keys, DPAPI-encrypted to that Windows user). This is a test to determine whether the company should adopt the tool more broadly.
+
+**Deployment decision — not yet made:** if/when wider adoption is approved, the team will choose between:
+1. **Individual app** — keep the current per-user install model, or
+2. **Company server app** — a centrally hosted, shared deployment
+
+This decision is **deferred** until the pilot concludes. Do not refactor toward a multi-tenant/server architecture in the meantime — in particular, don't propose replacing the SignalHire webhook.site relay (see "Webhook relay" below) with a directly-hosted callback endpoint. That relay exists specifically because a single-install desktop-style app has no stable public URL to receive SignalHire's callback; a hosted server app wouldn't need it. If the server model is chosen later, that's the point to revisit it.
+
+---
+
 ## Commands
 
 ```bash
