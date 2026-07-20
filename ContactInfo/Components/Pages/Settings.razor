@@ -88,9 +88,9 @@
 
         <p class="small text-muted mb-3">
             Some providers (e.g. SignalHire) deliver results by POSTing to a callback URL rather than
-            returning them directly. Configure a webhook relay here so the app can receive those results.
-            <a href="https://webhook.site" target="_blank">webhook.site</a> provides a free URL —
-            paste it below and the relay poll URL will be filled in automatically.
+            returning them directly. If you already have a relay with a polling URL, enter both below.
+            Otherwise, go to <a href="https://webhook.site" target="_blank">webhook.site</a>, copy the
+            URL it gives you into Callback URL, and the polling URL will be derived automatically.
         </p>
 
         <label class="form-label mb-1">
@@ -108,29 +108,21 @@
             The URL that API providers POST their results to.
         </div>
 
-        <label class="form-label mt-3 mb-1">Relay Poll URL
-            @if (WebhookCallbackUrl.Contains("webhook.site"))
+        @if (!WebhookCallbackUrl.Contains("webhook.site"))
+        {
+            <label class="form-label mt-3 mb-1">Relay Poll URL</label>
+            <input class="form-control font-monospace @(SignalHireEnabled && !string.IsNullOrWhiteSpace(WebhookCallbackUrl) && string.IsNullOrWhiteSpace(WebhookRelayPollUrl) ? "is-invalid" : "")"
+                   type="url"
+                   placeholder="https://your-relay.example.com/requests"
+                   @bind="WebhookRelayPollUrl" />
+            @if (SignalHireEnabled && !string.IsNullOrWhiteSpace(WebhookCallbackUrl) && string.IsNullOrWhiteSpace(WebhookRelayPollUrl))
             {
-                <span class="text-success small ms-2">(auto-derived from webhook.site URL)</span>
+                <div class="invalid-feedback">Required when using a relay other than webhook.site.</div>
             }
-            else if (!string.IsNullOrWhiteSpace(WebhookCallbackUrl))
-            {
-                <span class="text-warning small ms-2">(required for non-webhook.site relays)</span>
-            }
-            else
-            {
-                <span class="text-muted fw-normal small ms-2">(leave blank if using webhook.site)</span>
-            }
-        </label>
-        <input class="form-control font-monospace"
-               type="url"
-               placeholder="https://webhook.site/token/your-uuid/requests"
-               @bind="WebhookRelayPollUrl"
-               disabled="@(WebhookCallbackUrl.Contains("webhook.site"))" />
-        <div class="form-text">
-            The URL this app polls to retrieve results. Auto-derived for webhook.site;
-            for other relay services enter their API endpoint here.
-        </div>
+            <div class="form-text">
+                The URL this app polls to retrieve results from your relay.
+            </div>
+        }
     </div>
 
     <h6 class="text-muted mb-3 mt-2">General</h6>

@@ -126,6 +126,7 @@ Components/Layout/
 - Settings page auto-derives poll URL from webhook.site callback URL
 - Settings page checks relay on load and shows an expiry warning on 404/unreachable
 - Service fast-fails on 404 rather than waiting for timeout
+- **Privacy caveat:** webhook.site's free tier requires no login — the token UUID in the URL *is* the only access control. Anyone holding the callback/poll URL can view every request ever relayed to it, including candidate PII (name, email, phone) from SignalHire callbacks. Treat this URL with the same care as an API key (never paste into chat/tickets/screenshots). There's no DPA/SLA with webhook.site and no retention guarantee. This is an accepted limitation of the single-install pilot (see Project Status) — a company-server deployment would replace it with a self-hosted callback endpoint, keeping candidate data inside company infrastructure.
 
 **Security**
 - API keys encrypted at rest with Windows DPAPI (`DataProtectionScope.CurrentUser`)

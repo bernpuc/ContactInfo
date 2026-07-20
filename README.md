@@ -74,9 +74,11 @@ To pre-populate API keys via config (optional), add them to `appsettings.json` u
 SignalHire delivers results by POSTing to a callback URL rather than returning them in the API response. The app polls a webhook relay to retrieve those results. Configure this in **Settings → Webhook Relay**:
 
 - **Callback URL** — the URL SignalHire POSTs results to (e.g. a [webhook.site](https://webhook.site) URL)
-- **Relay Poll URL** — the URL the app polls to retrieve results; auto-derived when using webhook.site
+- **Relay Poll URL** — only shown if Callback URL isn't a webhook.site URL; the URL the app polls to retrieve results from your own relay. Auto-derived and hidden when using webhook.site.
 
 > **Note:** Free webhook.site URLs expire after 7 days and stop accepting requests after 100 hits. Update the Callback URL in Settings when this happens — the Settings page will show a warning if the relay is unreachable.
+>
+> **Privacy:** webhook.site's free tier requires no login — anyone holding the Callback URL can view everything relayed to it, including candidate PII from SignalHire callbacks. Treat it like an API key; never paste it into chat, tickets, or screenshots.
 
 ## Adding a New Provider
 

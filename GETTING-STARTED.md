@@ -45,10 +45,12 @@ SignalHire works differently from the other providers — instead of returning r
 1. Go to **https://webhook.site** in your browser
 2. Copy the unique URL it gives you (looks like `https://webhook.site/xxxxxxxx-...`)
 3. In ContactInfo Settings, scroll to **Webhook Relay**
-4. Paste the URL into the **Callback URL** field — the Relay Poll URL fills in automatically
+4. Paste the URL into the **Callback URL** field — the app derives the poll URL it needs automatically
 5. Click **Save**
 
 > The free webhook.site URL expires after 7 days. When it does, the Settings page will show a warning. Just get a fresh URL from webhook.site and paste it in again.
+>
+> **Privacy:** webhook.site's free tier requires no login — anyone holding this URL can view everything relayed to it, including candidate PII. Treat it like an API key; never paste it into chat, tickets, or screenshots.
 
 If you're not using SignalHire, skip this step entirely.
 
