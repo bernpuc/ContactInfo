@@ -93,6 +93,11 @@ See `ApolloService.cs`, `RocketReachService.cs`, or `SignalHireService.cs` as re
 
 ## Changelog
 
+### v1.3.0
+- Sidebar: removed the default "About" link (pointed to ASP.NET Core docs, confusing for end users); added a client logo pinned to the bottom of the sidebar
+- Settings: Relay Poll URL field now only shown when the Callback URL isn't webhook.site, instead of always displaying a disabled, redundant field
+- Documented webhook.site's free-tier privacy limitations (no login, no access control beyond the URL itself, no audit trail)
+
 ### v1.2.0
 - Contact type labels (work, personal, mobile, direct) shown as badges on emails and phones
   - RocketReach: phone `type` field; SignalHire: contact `subType` field
