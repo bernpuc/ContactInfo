@@ -34,10 +34,13 @@ Name: "startup";     Description: "Start ContactInfo automatically when Windows 
 [Files]
 ; All published output — self-contained, no .NET install required on target machine
 Source: "publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Getting-started guide, for post-install reference (see build.ps1 for how it gets here)
+Source: "..\GETTING-STARTED.pdf"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 ; Start Menu
 Name: "{group}\{#MyAppName}";           Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
+Name: "{group}\Getting Started";        Filename: "{app}\GETTING-STARTED.pdf"
 Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
 ; Desktop (optional task)
 Name: "{commondesktop}\{#MyAppName}";   Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon

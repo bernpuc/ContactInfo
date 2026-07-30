@@ -34,7 +34,7 @@ Click **Settings** in the left navigation.
 - Make sure the toggle next to each key is switched **on**
 - Click **Save**
 
-If you're not using a provider, switch its toggle off — it won't be queried and won't consume credits.
+If you're not using a provider, switch its toggle off — it won't be queried.
 
 ---
 
