@@ -25,7 +25,7 @@ New-Item -ItemType Directory -Path $signingDir -Force | Out-Null
 Write-Host "Creating self-signed code-signing certificate..." -ForegroundColor Cyan
 $cert = New-SelfSignedCertificate `
     -Type CodeSigningCert `
-    -Subject "CN=ContactInfo (bernpuc), O=bernpuc, C=US" `
+    -Subject "CN=ContactInfo (Ethan Puc), O=Ethan Puc, C=US" `
     -KeyUsage DigitalSignature `
     -KeyExportPolicy Exportable `
     -KeyAlgorithm RSA `
