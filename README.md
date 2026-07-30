@@ -31,7 +31,9 @@ All providers identify contacts by LinkedIn profile URL, which uniquely identifi
 
 A self-contained Windows installer is provided — no .NET installation required on the target machine.
 
-**To build the installer:**
+**[⬇ Download the latest installer](https://github.com/bernpuc/ContactInfo/releases/latest)** from the Releases page.
+
+**To build the installer yourself instead:**
 1. Install [Inno Setup 6](https://jrsoftware.org/isinfo.php) (free)
 2. Run `.\installer\build.ps1` from the repo root in PowerShell
 3. Distribute `installer\Output\ContactInfoSetup.exe`
