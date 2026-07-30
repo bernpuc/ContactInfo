@@ -1,6 +1,7 @@
 <div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
         <a class="navbar-brand" href="">ContactInfo</a>
+        <span class="navbar-version">(v@(AppVersion))</span>
     </div>
 </div>
 
@@ -25,3 +26,8 @@
 <div class="sidebar-footer">
     <img src="images/RS_logo.svg" alt="Client logo" />
 </div>
+
+@code {
+    private static readonly string AppVersion =
+        typeof(NavMenu).Assembly.GetName().Version?.ToString(3) ?? "";
+}

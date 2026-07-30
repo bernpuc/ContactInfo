@@ -24,6 +24,12 @@
     font-size: 1.1rem;
 }
 
+.navbar-version {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+}
+
 .bi {
     display: inline-block;
     position: relative;
