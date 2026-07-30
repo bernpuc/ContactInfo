@@ -6,7 +6,9 @@ ContactInfo looks up email addresses and phone numbers for people by their Linke
 
 ## 1. Install the App
 
-Run `ContactInfoSetup.exe` and follow the prompts. The installer places the app in your Program Files folder and creates a Start Menu shortcut. No other software needs to be installed.
+Run `ContactInfoSetup.exe` and follow the prompts. The installer places the app in your user folder and creates a Start Menu shortcut — no admin rights or other software needed.
+
+**If you see a blue "Windows protected your PC" screen:** this is Microsoft Defender SmartScreen, and it appears because the installer isn't digitally signed — it does not mean anything is wrong with the file. Click **More info**, then **Run anyway** to continue.
 
 When you launch ContactInfo, a small console window opens — this is normal. It shows the app is running and reminds you to press **Ctrl+C** to shut it down. Your browser should open automatically to the app.
 
