@@ -43,7 +43,9 @@ The installer creates Start Menu and optional desktop shortcuts. When launched, 
 ### Cutting a release (maintainers)
 
 1. Bump `<Version>` in `ContactInfo/ContactInfo.csproj`, commit and push
-2. Run `.\installer\release.ps1 -Notes "..."` from the repo root in PowerShell — builds the installer, tags `vX.Y.Z`, pushes the tag, and publishes a GitHub release with both `ContactInfoSetup.exe` and `GETTING-STARTED.pdf` attached
+2. Run `.\installer\release.ps1 -Notes "..."` from the repo root in PowerShell — builds the installer, signs it if `installer\signing\ContactInfo-signing.pfx` exists, tags `vX.Y.Z`, pushes the tag, and publishes a GitHub release with `ContactInfoSetup.exe`, `GETTING-STARTED.pdf`, and (if signed) `ContactInfo-signing.cer` attached
+
+**One-time setup:** run `.\installer\create-signing-cert.ps1` to generate a free self-signed code-signing certificate. It's a workaround for not having a paid Authenticode cert — see `GETTING-STARTED.md` for what it does and doesn't fix about the SmartScreen warning users see.
 
 Requires [Inno Setup 6](https://jrsoftware.org/isinfo.php) and an authenticated [GitHub CLI](https://cli.github.com/) (`gh`).
 

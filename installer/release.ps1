@@ -1,6 +1,6 @@
 # Release script for ContactInfo
 # Builds the installer, tags the release, and publishes a GitHub release
-# with both the installer and the Getting Started PDF attached — so the
+# with both the installer and the Getting Started PDF attached - so the
 # PDF can't be forgotten as a release asset the way it was for v1.3.1.
 #
 # Prerequisites: Inno Setup 6, GitHub CLI (gh) authenticated
@@ -39,6 +39,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $installerExe      = Join-Path $outputDir "ContactInfoSetup.exe"
 $gettingStartedPdf = Join-Path $outputDir "GETTING-STARTED.pdf"
+$signingCer        = Join-Path $PSScriptRoot "signing\ContactInfo-signing.cer"
 
 foreach ($assetPath in @($installerExe, $gettingStartedPdf)) {
     if (-not (Test-Path $assetPath)) {
@@ -46,12 +47,20 @@ foreach ($assetPath in @($installerExe, $gettingStartedPdf)) {
     }
 }
 
+$releaseAssets = @($installerExe, $gettingStartedPdf)
+if (Test-Path $signingCer) {
+    # Public cert only - lets users trust the publisher without cloning the repo.
+    $releaseAssets += $signingCer
+} else {
+    Write-Warning "No signing certificate at '$signingCer' - release will not include a trust certificate."
+}
+
 Write-Host "Tagging $tag..." -ForegroundColor Cyan
 git -C $root tag -a $tag -m "ContactInfo $tag"
 git -C $root push origin $tag
 
 Write-Host "Creating GitHub release..." -ForegroundColor Cyan
-gh release create $tag $installerExe $gettingStartedPdf `
+gh release create $tag @releaseAssets `
     --title "ContactInfo $tag" `
     --notes $Notes
 

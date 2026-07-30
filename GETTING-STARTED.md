@@ -4,11 +4,21 @@ ContactInfo looks up email addresses and phone numbers for people by their Linke
 
 ---
 
+## (Optional) Trust the Publisher Certificate
+
+The installer is signed with a self-signed certificate rather than a paid one, so Windows doesn't recognize it out of the box. Trusting it first means the SmartScreen warning below shows "ContactInfo (bernpuc)" instead of "Unknown publisher." You can skip this and go straight to Step 1 — it just means the warning looks scarier.
+
+1. Download `ContactInfo-signing.cer` from the same [release page](https://github.com/bernpuc/ContactInfo/releases/latest) as the installer
+2. Double-click it → **Install Certificate...**
+3. Choose **Current User** → Next
+4. Choose **Place all certificates in the following store** → **Browse** → **Trusted Root Certification Authorities** → OK → Next → Finish
+5. Windows will warn that you're about to trust a certificate that can't be verified by a third party — this is expected for a self-signed cert. Click **Yes** to confirm.
+
 ## 1. Install the App
 
 Run `ContactInfoSetup.exe` and follow the prompts. The installer places the app in your user folder and creates a Start Menu shortcut — no admin rights or other software needed.
 
-**If you see a blue "Windows protected your PC" screen:** this is Microsoft Defender SmartScreen, and it appears because the installer isn't digitally signed — it does not mean anything is wrong with the file. Click **More info**, then **Run anyway** to continue.
+**If you see a blue "Windows protected your PC" screen:** this is Microsoft Defender SmartScreen. It doesn't mean anything is wrong with the file — SmartScreen flags any app that hasn't yet built up reputation with Microsoft, which self-signed and small-publisher apps never fully do. Click **More info**, then **Run anyway** to continue.
 
 When you launch ContactInfo, a small console window opens — this is normal. It shows the app is running and reminds you to press **Ctrl+C** to shut it down. Your browser should open automatically to the app.
 
