@@ -20,9 +20,8 @@ OutputBaseFilename=ContactInfoSetup
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
-; Run as the installing user (not system) so %APPDATA% resolves correctly for settings
+; Per-user install only — no admin, no option to escalate to all-users
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -43,7 +42,7 @@ Name: "{group}\{#MyAppName}";           Filename: "{app}\{#MyAppExeName}"; Worki
 Name: "{group}\Getting Started";        Filename: "{app}\GETTING-STARTED.pdf"
 Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
 ; Desktop (optional task)
-Name: "{commondesktop}\{#MyAppName}";   Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{userdesktop}\{#MyAppName}";     Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 ; Windows startup (optional task)
 Name: "{userstartup}\{#MyAppName}";     Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: startup
 
