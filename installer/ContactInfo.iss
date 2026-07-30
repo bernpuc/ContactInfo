@@ -2,7 +2,7 @@
 ; Build with: installer\build.ps1  (requires Inno Setup 6)
 
 #define MyAppName      "ContactInfo"
-#define MyAppVersion   "1.3.0"
+#define MyAppVersion   "1.3.1"
 #define MyAppPublisher "bernpuc"
 #define MyAppExeName   "ContactInfo.exe"
 #define MyAppURL       "http://localhost:5100"
@@ -47,21 +47,81 @@ Name: "{userdesktop}\{#MyAppName}";     Filename: "{app}\{#MyAppExeName}"; Worki
 Name: "{userstartup}\{#MyAppName}";     Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: startup
 
 [Run]
-; Launch the app after install finishes (the app auto-opens the browser)
+; Launch the app after install finishes (the app auto-opens the browser).
+; Check: guards against offering/running this when the exe never actually
+; made it to disk (e.g. the user chose "Ignore" on a locked-file copy error).
 Filename: "{app}\{#MyAppExeName}"; \
     Description: "Launch {#MyAppName} now"; \
-    Flags: postinstall nowait skipifsilent
+    Flags: postinstall nowait skipifsilent; \
+    Check: AppInstalledOk
 
 [UninstallRun]
 ; Stop any running instance before uninstalling
 Filename: "taskkill.exe"; Parameters: "/IM {#MyAppExeName} /F"; Flags: runhidden; RunOnceId: "KillApp"
 
 [Code]
-// Show a warning if another instance is already running when the installer starts
+const
+  KillTimeoutMs = 5000;
+  KillPollIntervalMs = 250;
+
+// True if a process with this image name is still in the task list.
+// taskkill returning doesn't guarantee the OS has released the exe's file
+// handle yet, so InitializeSetup polls this rather than trusting the
+// Exec call alone — otherwise the file-copy step can hit a locked-file
+// error while the handle is still winding down.
+function IsProcessRunning(const ExeName: string): Boolean;
+var
+  ResultCode: Integer;
+  TmpFile: string;
+  Output: TStringList;
+  I: Integer;
+begin
+  Result := False;
+  TmpFile := ExpandConstant('{tmp}\tasklist_check.txt');
+  Exec(ExpandConstant('{cmd}'), '/C tasklist /FI "IMAGENAME eq ' + ExeName + '" /FO CSV /NH > "' + TmpFile + '" 2>nul', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  if FileExists(TmpFile) then
+  begin
+    Output := TStringList.Create;
+    try
+      Output.LoadFromFile(TmpFile);
+      for I := 0 to Output.Count - 1 do
+      begin
+        if Pos(Lowercase(ExeName), Lowercase(Output[I])) > 0 then
+        begin
+          Result := True;
+          Break;
+        end;
+      end;
+    finally
+      Output.Free;
+    end;
+    DeleteFile(TmpFile);
+  end;
+end;
+
+// Show a warning if another instance is already running when the installer starts,
+// and wait for it to actually exit before letting file copy begin.
 function InitializeSetup(): Boolean;
 var
   ResultCode: Integer;
+  WaitedMs: Integer;
 begin
   Exec('taskkill.exe', '/IM {#MyAppExeName} /F', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+
+  WaitedMs := 0;
+  while IsProcessRunning('{#MyAppExeName}') and (WaitedMs < KillTimeoutMs) do
+  begin
+    Sleep(KillPollIntervalMs);
+    WaitedMs := WaitedMs + KillPollIntervalMs;
+  end;
+
   Result := True;
+end;
+
+// Gate for the [Run] launch entry: only offer/run it if the exe actually
+// made it onto disk, so a partially-failed install can't try (and fail)
+// to auto-launch a broken install.
+function AppInstalledOk(): Boolean;
+begin
+  Result := FileExists(ExpandConstant('{app}\{#MyAppExeName}'));
 end;
