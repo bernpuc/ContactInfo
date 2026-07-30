@@ -40,6 +40,13 @@ A self-contained Windows installer is provided — no .NET installation required
 
 The installer creates Start Menu and optional desktop shortcuts. When launched, the app opens automatically in the default browser at `http://localhost:5100`. A console window shows the URL and instructions — press **Ctrl+C** there to shut the app down.
 
+### Cutting a release (maintainers)
+
+1. Bump `<Version>` in `ContactInfo/ContactInfo.csproj`, commit and push
+2. Run `.\installer\release.ps1 -Notes "..."` from the repo root in PowerShell — builds the installer, tags `vX.Y.Z`, pushes the tag, and publishes a GitHub release with both `ContactInfoSetup.exe` and `GETTING-STARTED.pdf` attached
+
+Requires [Inno Setup 6](https://jrsoftware.org/isinfo.php) and an authenticated [GitHub CLI](https://cli.github.com/) (`gh`).
+
 ### Running from source (developers)
 
 Requires [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9).
