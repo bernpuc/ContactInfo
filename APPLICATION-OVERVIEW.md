@@ -1,7 +1,5 @@
 # ContactInfo — Application Overview
 
-2026-10-29 · Bernard Puc
-
 ## What ContactInfo Is
 
 ContactInfo is an internal tool that finds a person's work email address and phone number starting from just their LinkedIn profile page. A staff member pastes in a LinkedIn URL — or uploads a spreadsheet of many at once — and the app checks two paid "people data" services (RocketReach and SignalHire) at the same time, then combines whatever each one finds into a single answer.
